@@ -1,2 +1,4 @@
 splits.h5
 __pycache__/
+.ipynb_checkpoints/
+*npz
