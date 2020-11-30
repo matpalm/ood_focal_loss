@@ -1,11 +1,18 @@
+import argparse
+
+import h5py
+import numpy as np
 import objax
-from objax.zoo.resnet_v2 import ResNet18
 from objax.functional import softmax
 from objax.functional.loss import cross_entropy_logits_sparse
-import numpy as np
-import util as u
-import h5py
+from objax.zoo.resnet_v2 import ResNet18
 
+import util as u
+
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--output-model', type=str, required=True)
+opts = parser.parse_args()
 
 model = ResNet18(in_channels=3, num_classes=10)
 
@@ -51,11 +58,9 @@ for epoch in range(10):
             x_train[batch_idxs], y_train[batch_idxs], learning_rate)
 
     # report validation top1 accuracy
-    y_preds = np.argmax(u.predict_in_batches(
-        predict, x_validate, batch_size), axis=1)
-    num_correct = np.sum(y_preds == y_validate)
-    accuracy = num_correct / len(y_validate)
-    print("learning_rate", learning_rate, "validation accuracy", accuracy)
+    accuracy = u.accuracy(predict, x_validate, y_validate)
+    print("learning_rate", learning_rate,
+          "validation accuracy", accuracy)
 
     # very simple step down across learning rates
     if epoch < 3:
@@ -67,4 +72,4 @@ for epoch in range(10):
     else:
         break
 
-objax.io.save_var_collection('model1.npz', model.vars())
+objax.io.save_var_collection(opts.output_model, model.vars())

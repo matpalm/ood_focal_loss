@@ -1,8 +1,8 @@
-from tensorflow.keras.datasets import cifar10
-import numpy as np
-import util as u
 import h5py
+import numpy as np
+from tensorflow.keras.datasets import cifar10
 
+import util as u
 
 # open h5 bundle
 hf = h5py.File('splits.h5', 'w')
