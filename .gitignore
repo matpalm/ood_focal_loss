@@ -2,3 +2,9 @@ splits.h5
 __pycache__/
 .ipynb_checkpoints/
 *npz
+m1/
+m2/
+m3/
+m4_1/
+m4_2/
+m4_3/

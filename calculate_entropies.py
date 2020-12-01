@@ -1,20 +1,27 @@
-import objax
-from objax.zoo.resnet_v2 import ResNet18
-from objax.functional import softmax
-import seaborn as sns
-import pandas as pd
-import util as u
-import h5py
 import argparse
+
+import h5py
+import jax.numpy as jnp
+import objax
+import pandas as pd
+import seaborn as sns
+from objax.functional import softmax
+from objax.zoo.resnet_v2 import ResNet18
+
+import layers
+import util as u
 
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--model', type=str, required=True)
-parser.add_argument('--output-png', type=str, required=True)
+parser.add_argument('--model-dir', type=str, required=True)
+parser.add_argument('--include-temp-layer', action='store_true')  # o_O clumsy
 opts = parser.parse_args()
 
 model = ResNet18(in_channels=3, num_classes=10)
-objax.io.load_var_collection(opts.model, model.vars())
+if opts.include_temp_layer:
+    model.append(layers.Temperature())
+
+objax.io.load_var_collection(f"{opts.model_dir}/weights.npz", model.vars())
 
 predict = objax.Jit(lambda x: softmax(model(x, training=False)),
                     model.vars())
@@ -36,8 +43,10 @@ df = pd.DataFrame({"train": u.entropy(y_pred_train),
                    "test": u.entropy(y_pred_test),
                    "ood": u.entropy(y_pred_ood)})
 
+df.to_csv(f"{opts.model_dir}/entropy.tsv", sep="\t", index=False)
+
 p = sns.displot(df, kind='kde')
 p.set(xlim=(0, None))
 p.fig.set_figwidth(16)
 p.fig.set_figwidth(9)
-p.savefig(opts.output_png, transparent=True)
+p.savefig(f"{opts.model_dir}/entropy.png", transparent=True)
